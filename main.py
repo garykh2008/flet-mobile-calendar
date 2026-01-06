@@ -532,4 +532,5 @@ def main(page: ft.Page):
     render_events()
 
 if __name__ == "__main__":
-    ft.run(main, no_cdn=True)
+    print("Flet version:", ft.version)
+    ft.run(main, port=8550, no_cdn=True)
