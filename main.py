@@ -532,4 +532,4 @@ def main(page: ft.Page):
     render_events()
 
 if __name__ == "__main__":
-    ft.run(main)
+    ft.run(main, no_cdn=True)
