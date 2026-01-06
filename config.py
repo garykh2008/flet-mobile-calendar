@@ -1,0 +1,5 @@
+# Supabase Configuration
+# 在實際生產環境中，請使用環境變數或加密方式儲存
+
+SUPABASE_URL = "https://oebxhsbpxeltjvrzvweu.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lYnhoc2JweGVsdGp2cnp2d2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2OTIzMjQsImV4cCI6MjA4MzI2ODMyNH0.FwFm7iy73DT-QazUaf0xzj2RA2LlSkXjau-tgkkWNpM"

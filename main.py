@@ -2,6 +2,9 @@ import flet as ft
 import calendar
 import datetime
 import copy
+from auth_service import AuthService
+from login_ui import show_login_dialog
+from supabase_repo import SupabaseEventRepository
 
 # 設定星期幾的標題
 WEEK_DAYS = ["一", "二", "三", "四", "五", "六", "日"]
@@ -70,8 +73,9 @@ def main(page: ft.Page):
     # 依據主題設定背景色
     page.bgcolor = ft.colors.BLACK if page.theme_mode == ft.ThemeMode.DARK else ft.colors.WHITE
 
-    # 初始化 Repository
+    # 初始化 Repository (預設使用本地，登入後切換)
     repo = EventRepository(page)
+    auth_service = AuthService()
 
     # 2. 應用程式狀態 (UI State)
     today = datetime.date.today()
@@ -492,12 +496,60 @@ def main(page: ft.Page):
         on_click=toggle_theme
     )
 
+    # 登入相關邏輯
+    def on_login_success():
+        nonlocal repo
+        user = auth_service.user
+        if user:
+            # 切換到 Supabase Repository
+            repo = SupabaseEventRepository(page, auth_service.supabase)
+            repo.load_events() # 預先載入資料
+
+            # 更新 UI
+            page.snack_bar = ft.SnackBar(ft.Text(f"歡迎回來，{user.email}！已切換至雲端模式。"))
+            page.snack_bar.open = True
+            login_icon.icon = ft.icons.LOGOUT
+            login_icon.tooltip = f"登出 ({user.email})"
+
+            render_events()
+            render_calendar()
+
+    def toggle_login(e):
+        if auth_service.user:
+            # 登出邏輯
+            auth_service.sign_out()
+            # 切換回本地 Repository
+            nonlocal repo
+            repo = EventRepository(page)
+
+            login_icon.icon = ft.icons.LOGIN
+            login_icon.tooltip = "登入 / 註冊"
+            page.snack_bar = ft.SnackBar(ft.Text("已登出，切換回本地模式。"))
+            page.snack_bar.open = True
+
+            render_events()
+            render_calendar()
+        else:
+            show_login_dialog(page, auth_service, on_login_success)
+
+    login_icon = ft.IconButton(
+        ft.icons.LOGIN,
+        tooltip="登入 / 註冊",
+        on_click=toggle_login
+    )
+
+    # 檢查是否已有 Session (如果 Supabase 支援持久化)
+    # 在 Flet mobile 中可能需要更複雜的 storage 處理，這裡簡單檢查
+    if auth_service.get_current_user():
+        on_login_success()
+
     page.appbar = ft.AppBar(
         leading=ft.IconButton(ft.icons.CHEVRON_LEFT, on_click=prev_month),
         title=current_month_text, center_title=True,
         actions=[
             ft.IconButton(ft.icons.CHEVRON_RIGHT, on_click=next_month),
-            theme_icon # 加入主題切換按鈕
+            login_icon, # 加入登入按鈕
+            theme_icon
         ],
         # 移除固定背景，改用 Surface Variant 或預設
         bgcolor=None, 
